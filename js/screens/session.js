@@ -17,8 +17,8 @@ export function faceMapSVG(s, { editable = true, view = st.ui.view || 'front', s
   const pts = (s.points || []).filter((p) => p.view === view);
   const hints = editable ? F.zonesFor(view, s.type) : [];
   return raw(`<svg class="facemap ${small ? 'small' : ''}" ${editable ? 'id="facemap"' : ''} viewBox="0 0 ${F.VB.w} ${F.VB.h}" role="img">
-    ${hints.map((z) => `<circle class="zone-hint" cx="${z.x}" cy="${z.y}" r="${z.r}"/>`).join('')}
     ${F.viewSVG(view)}
+    ${hints.map((z) => `<circle class="zone-hint" cx="${z.x}" cy="${z.y}" r="${z.r}"/>`).join('')}
     ${pts.map((p) => `<g class="pt ${p.id === st.ui.selPt ? 'sel' : ''}" data-pt="${p.id}" transform="translate(${p.x},${p.y})">
       <circle r="13"/><text dy="4">${num(p.amount, 2)}${unit === 'u' ? '' : ''}</text></g>`).join('')}
   </svg>`);

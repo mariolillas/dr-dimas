@@ -18,7 +18,7 @@ Installable web app for an iPad (Safari → Share → **Add to Home Screen**). I
 - `js/`:
   - `crypto.js`, `db.js`, `store.js`: encryption and storage.
   - `content.js`: the clinic's consent and instruction texts. These are **drafts pending the doctor's approval**.
-  - `face.js`: the original line-art face map with its anatomical zones.
+  - `face.js`: the face map (front and left profile illustrations, mirrored for the right side) with its anatomical zones.
   - `model.js`: summaries, pricing and follow-up rules.
   - `screens/*.js`: the UI.
   - `i18n.js`: English and Spanish strings.
