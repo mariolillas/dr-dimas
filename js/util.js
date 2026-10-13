@@ -53,6 +53,8 @@ export const initials = (name) =>
   String(name || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() || '').join('');
 export const firstName = (name) => String(name || '').trim().split(/\s+/)[0] || '';
 export const digits = (s) => String(s || '').replace(/\D/g, '');
+// Para buscar sin acentos ni mayúsculas: 'Lucía' → 'lucia'.
+export const norm = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
 export function debounce(fn, ms = 400) {
   let t;

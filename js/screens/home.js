@@ -2,9 +2,9 @@
 import * as S from '../store.js';
 import * as M from '../model.js';
 import { alertsFor, TEMPLATES } from '../content.js';
-import { html, todayISO, addDays, daysBetween, firstName, digits, uid } from '../util.js';
+import { html, str, todayISO, addDays, daysBetween, firstName, digits, uid, norm } from '../util.js';
 import { t, getLang, setLang } from '../i18n.js';
-import { SCREENS, SHEETS, A, st, go, render, openSheet, closeSheet, toast, ask, fmtDate, fmtTime, ago, avatar, chip, icon, settings } from '../core.js';
+import { SCREENS, SHEETS, A, st, go, render, openSheet, closeSheet, toast, ask, fmtDate, fmtTime, ago, avatar, chip, icon, settings, hydrate } from '../core.js';
 
 export function alertChips(p, max = 3) {
   const out = alertsFor(p).slice(0, max).map((a) => chip(alertText(a), a.c));
@@ -96,7 +96,7 @@ function apptRow(a) {
   const consentMissing = p && (a.service === 'tox' || a.service === 'filler') && !M.consentFor(p.id, a.service);
   return html`<button class="row-item" data-act="openAppt" data-id="${a.id}">
     <span class="time">${fmtTime(a.time)}</span>
-    ${avatar(name)}
+    ${avatar(name, '', p?.photo?.thumbId)}
     <span class="grow"><b>${name}</b>
       <small>${t('svc.' + (a.service || 'other'))}${a.note ? ' · ' + a.note : ''}</small></span>
     <span class="chips">${p ? alertChips(p, 2) : chip(t('chip.newPatient'), 'gray')}${consentMissing ? chip(t('chip.consentPending'), 'amber') : ''}</span>
@@ -112,7 +112,7 @@ A.openAppt = (el) => {
 
 function fuRow(f) {
   return html`<div class="row-item">
-    ${avatar(f.p.name)}
+    ${avatar(f.p.name, '', f.p.photo?.thumbId)}
     <span class="grow"><b>${f.p.name}</b><small>${t('fu.' + f.kind)} · ${M.sessionTitle(f.s)} · ${ago(f.s.date)}</small></span>
     <button class="btn small mint" data-act="message" data-pid="${f.p.id}" data-sid="${f.s.id}" data-kind="${f.kind}">${icon('msg')} ${t('btn.message')}</button>
     <button class="btn small ghost" data-act="fuDone" data-sid="${f.s.id}" data-kind="${f.kind}">${icon('check')}</button>
@@ -144,23 +144,26 @@ SCREENS.patients = () => {
   </main>` };
 };
 function patientRows() {
-  const q = (st.ui.pq || '').toLowerCase().trim();
+  const q = norm(st.ui.pq);
   const dq = digits(q);
   let ps = M.patients();
   if (st.ui.pFilter === 'paper') ps = ps.filter((p) => p.status === 'paper');
-  if (q) ps = ps.filter((p) => p.name.toLowerCase().includes(q) || (dq && digits(p.phone + ' ' + p.cell).includes(dq)));
+  if (q) ps = ps.filter((p) => norm(p.name).includes(q) || norm(p.email).includes(q)
+    || (dq.length >= 3 && digits(`${p.phone} ${p.cell}`).includes(dq)));
   ps = ps.map((p) => ({ p, last: M.lastSession(p.id) }))
     .sort((a, b) => (b.last?.date || '').localeCompare(a.last?.date || '') || a.p.name.localeCompare(b.p.name));
   if (!ps.length) return html`<div class="empty">${t('pat.none')}</div>`;
-  return ps.map(({ p, last }) => html`<button class="row-item" data-act="go" data-to="patient" data-id="${p.id}">
-    ${avatar(p.name)}
+  return html`${ps.map(({ p, last }) => html`<button class="row-item" data-act="go" data-to="patient" data-id="${p.id}">
+    ${avatar(p.name, '', p.photo?.thumbId)}
     <span class="grow"><b>${p.name}</b><small>${last ? `${M.sessionTitle(last)} · ${ago(last.date)}` : t('pat.noSessions')}</small></span>
     <span class="chips">${alertChips(p, 2)}</span>${icon('chev-r', 'chev')}
-  </button>`);
+  </button>`)}`;
 }
 A.pSearch = (el) => {
   st.ui.pq = el.value;
-  document.getElementById('plist').innerHTML = String(patientRows().s ?? '');
+  const list = document.getElementById('plist');
+  list.innerHTML = str(patientRows());
+  hydrate(list);
 };
 A.pFilter = (el) => { st.ui.pFilter = el.dataset.f; render(); };
 
@@ -184,19 +187,28 @@ SCREENS.followups = () => {
 
 // ---------- Hoja: elegir paciente ----------
 SHEETS.pickPatient = () => {
-  const q = (st.ui.pickQ || '').toLowerCase();
-  const ps = M.patients().filter((p) => !q || p.name.toLowerCase().includes(q)).sort((a, b) => a.name.localeCompare(b.name));
+  const ps = pickList();
   return { html: html`<div class="sheet-h"><button class="link" data-act="closeSheet">${t('btn.cancel')}</button><b>${t('pick.title')}</b><span></span></div>
     <div class="sheet-body">
       <div class="search">${icon('search')}<input id="pickq" type="search" placeholder="${t('pat.search')}" value="${st.ui.pickQ || ''}" data-live="pickSearch"></div>
-      <div class="list" id="picklist">${ps.slice(0, 60).map((p) => html`<button class="row-item" data-act="pickDo" data-id="${p.id}">${avatar(p.name)}<span class="grow"><b>${p.name}</b></span>${icon('chev-r', 'chev')}</button>`)}</div>
+      <div class="list" id="picklist">${pickRows(ps)}</div>
       <button class="btn ghost full" data-act="newPatient">${icon('plus')} ${t('qa.patient')}</button>
     </div>`, after: () => document.getElementById('pickq')?.focus({ preventScroll: true }) };
 };
 A.pickPatient = () => { st.ui.pickQ = ''; openSheet('pickPatient'); };
+function pickList() {
+  const q = norm(st.ui.pickQ);
+  return M.patients().filter((p) => !q || norm(p.name).includes(q)).sort((a, b) => a.name.localeCompare(b.name));
+}
+function pickRows(ps) {
+  if (!ps.length) return html`<div class="empty">${t('pat.none')}</div>`;
+  return html`${ps.slice(0, 60).map((p) => html`<button class="row-item" data-act="pickDo" data-id="${p.id}">${avatar(p.name, '', p.photo?.thumbId)}<span class="grow"><b>${p.name}</b></span>${icon('chev-r', 'chev')}</button>`)}`;
+}
 A.pickSearch = (el) => {
-  st.ui.pickQ = el.value; render();
-  const i = document.getElementById('pickq'); i.focus(); i.setSelectionRange(i.value.length, i.value.length);
+  st.ui.pickQ = el.value;
+  const list = document.getElementById('picklist');
+  list.innerHTML = str(pickRows(pickList()));
+  hydrate(list);
 };
 A.pickDo = (el) => { closeSheet(); go('session', { pid: el.dataset.id }); };
 

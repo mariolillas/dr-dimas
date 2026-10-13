@@ -95,7 +95,14 @@ const onField = (e) => {
   if (el.dataset.live && A[el.dataset.live]) Promise.resolve(A[el.dataset.live](el, e)).catch(showError);
 };
 app.addEventListener('input', onField);
-app.addEventListener('change', (e) => { if (e.target.type === 'file') return; onField(e); });
+// 'change' solo para selects, casillas y fechas: en campos de texto ya se procesó con 'input', y repetirlo al perder
+// el foco re-pintaba la lista justo cuando el dedo tocaba un resultado (el toque se perdía).
+const TEXTY = new Set(['text', 'search', 'tel', 'email', 'number', 'url', 'textarea']);
+app.addEventListener('change', (e) => {
+  const el = e.target;
+  if (el.type === 'file' || TEXTY.has(el.type)) return;
+  onField(e);
+});
 
 function fieldValue(el) {
   if (el.type === 'checkbox') return el.checked;
@@ -134,7 +141,7 @@ fileInput.addEventListener('change', async () => {
   fileInput.value = '';
   if (files.length && fileCb) await Promise.resolve(fileCb(files)).catch(showError);
 });
-export function pickImages(cb, { multiple = false, camera = true } = {}) {
+export function pickImages(cb, { multiple = false, camera = false } = {}) {
   fileCb = cb;
   fileInput.multiple = multiple;
   if (camera) fileInput.setAttribute('capture', 'environment'); else fileInput.removeAttribute('capture');
@@ -228,7 +235,9 @@ export const ago = (iso) => {
   if (d < 70) return t('time.weeks', { n: Math.round(d / 7) });
   return t('time.months', { n: Math.round(d / 30.4) });
 };
-export const avatar = (name, cls = '') => html`<span class="avatar ${cls}">${initialsOf(name)}</span>`;
+export const avatar = (name, cls = '', img = null) => (img
+  ? html`<span class="avatar photo ${cls}"><img data-img="${img}" alt=""></span>`
+  : html`<span class="avatar ${cls}">${initialsOf(name)}</span>`);
 const initialsOf = (n) => String(n || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() || '').join('');
 export const chip = (text, c = '') => html`<span class="chip ${c}">${text}</span>`;
 

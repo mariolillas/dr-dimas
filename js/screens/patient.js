@@ -17,14 +17,15 @@ SCREENS.patient = ({ id }) => {
   if (!p) return { html: html`${navbar('')}<main class="page"><div class="empty">${t('pat.notFound')}</div></main>` };
   const ss = M.sessionsOf(id);
   const i = p.intake || {};
-  const photos = [...(p.paperPhotos || []).map((ph) => ({ ...ph, tag: 'paper' })),
-    ...ss.flatMap((s) => (s.photos || []).map((ph) => ({ ...ph, date: s.date })))];
+  const nPhotos = ss.reduce((a, s) => a + (s.photos?.length || 0), 0);
+  const paper = p.paperPhotos || [];
+  const shown = st.ui.allPhotos === id ? ss : ss.slice(0, 4);
   const rel = PHOTO_RELEASE.options.find((o) => o.v === p.photoRelease);
   const docs = M.docsOf(id);
   return { html: html`${navbar(t('pat.record'), { right: html`<button class="link" data-act="newAppt" data-pid="${id}">${icon('calendar')}</button>` })}
   <main class="page">
     <section class="card hero">
-      ${avatar(p.name, 'xl')}
+      <button class="avatar-btn" data-act="patientPhoto" data-id="${id}" aria-label="${t('pat.photoSet')}">${avatar(p.name, 'xl', p.photo?.thumbId)}<span class="cam">${icon('camera')}</span></button>
       <div class="grow">
         <h1 class="serif name">${p.name}</h1>
         <p class="muted">${p.dob ? `${fmtDate(p.dob)} · ${age(p.dob)} ${t('pat.yrs')}` : t('pat.noDob')}
@@ -90,10 +91,12 @@ SCREENS.patient = ({ id }) => {
         </section>
 
         <section class="card">
-          <div class="card-h"><h3 class="serif">${t('pat.photos')}</h3><span class="muted small">${photos.length}</span></div>
-          ${photos.length ? html`<div class="thumbs">${photos.map((ph) => html`<button class="thumb" data-act="viewPhoto" data-img="${ph.id}">
-            <img data-img="${ph.thumbId || ph.id}" alt=""><span>${ph.tag === 'paper' ? t('photo.paper') : t('photo.' + (ph.tag || 'before'))}${ph.date ? ' · ' + fmtDate(ph.date, { month: 'short', day: 'numeric' }) : ''}</span></button>`)}</div>`
-            : html`<div class="empty">${t('pat.noPhotos')}</div>`}
+          <div class="card-h"><h3 class="serif">${t('pat.photos')}</h3><span class="muted small">${nPhotos}</span></div>
+          ${ss.length ? html`<p class="muted small">${t('photo.groupHint')}</p>${shown.map((s) => photoGroup(s))}
+            ${ss.length > shown.length ? html`<button class="link" data-act="allPhotos" data-id="${id}">${t('photo.more', { n: ss.length - shown.length })}</button>` : ''}`
+            : html`<div class="empty">${t('photo.needSession')}</div>`}
+          ${paper.length ? html`<div class="ph-group"><div class="ph-h"><b>${t('photo.paperGroup')}</b></div>
+            <div class="thumbs small">${paper.map((ph, i) => html`<button class="thumb" data-act="viewPhoto" data-img="${ph.id}"><img data-img="${ph.thumbId}" alt=""><span>${t('paper.page', { n: i + 1 })}</span></button>`)}</div></div>` : ''}
         </section>
       </div>
     </div>
@@ -115,9 +118,53 @@ A.deletePatient = (el) => ask(t('pat.deleteQ'), async () => {
   back();
 }, { yes: t('btn.delete'), danger: true });
 
-SHEETS.photo = ({ img }) => ({ wide: true, html: html`<div class="sheet-h"><span></span><b></b><button class="link" data-act="closeSheet">${t('btn.close')}</button></div>
+// ---------- Fotos por sesión ----------
+export function photoGroup(s) {
+  const items = (s.photos || []).map((ph, i) => ({ ph, i }));
+  const ordered = [...items.filter((x) => x.ph.tag === 'before'), ...items.filter((x) => x.ph.tag !== 'before')];
+  return html`<div class="ph-group">
+    <div class="ph-h"><span class="grow"><b>${fmtDate(s.date)}</b> <small>${M.sessionTitle(s)}</small></span>
+      <button class="btn small ghost" data-act="addSesPhoto" data-sid="${s.id}" data-tag="before">${icon('camera')} ${t('photo.before')}</button>
+      <button class="btn small ghost" data-act="addSesPhoto" data-sid="${s.id}" data-tag="after">${icon('camera')} ${t('photo.after')}</button></div>
+    ${ordered.length ? html`<div class="thumbs small">${ordered.map(({ ph, i }) => html`<button class="thumb" data-act="viewPhoto" data-img="${ph.id}" data-sid="${s.id}" data-i="${i}">
+      <img data-img="${ph.thumbId}" alt=""><span>${t('photo.' + ph.tag)}</span></button>`)}</div>` : html`<p class="muted small">${t('photo.none')}</p>`}
+  </div>`;
+}
+const keepY = () => { const y = window.scrollY; render(); window.scrollTo(0, y); };
+A.addSesPhoto = (el) => pickImages(async (files) => {
+  const s = S.data.session[el.dataset.sid];
+  s.photos ||= [];
+  for (const f of files) s.photos.push({ ...(await S.putPhoto(await readImage(f))), tag: el.dataset.tag });
+  await S.save('session', s);
+  toast(t('photo.added', { n: files.length }));
+  keepY();
+}, { multiple: true });
+A.allPhotos = (el) => { st.ui.allPhotos = el.dataset.id; keepY(); };
+A.patientPhoto = (el) => pickImages(async ([f]) => {
+  const p = M.patient(el.dataset.id);
+  const old = p.photo;
+  p.photo = await S.putPhoto(await readImage(f, 900, 240));
+  await S.save('patient', p);
+  if (old) { await S.deleteImage(old.id); await S.deleteImage(old.thumbId); }
+  keepY();
+});
+
+SHEETS.photo = ({ img, sid }) => ({ wide: true, html: html`<div class="sheet-h">
+    ${sid ? html`<button class="link danger" data-act="deletePhoto">${icon('trash')} ${t('btn.delete')}</button>` : html`<span></span>`}<b></b>
+    <button class="link" data-act="closeSheet">${t('btn.close')}</button></div>
   <div class="sheet-body center"><img class="photo-full" data-img="${img}" alt=""></div>` });
-A.viewPhoto = (el) => openSheet('photo', { img: el.dataset.img });
+A.viewPhoto = (el) => openSheet('photo', { img: el.dataset.img, sid: el.dataset.sid, i: el.dataset.i });
+A.deletePhoto = () => {
+  const { sid, i } = st.sheet.params;
+  ask(t('photo.deleteQ'), async () => {
+    const s = S.data.session[sid];
+    const [ph] = s.photos.splice(Number(i), 1);
+    await S.save('session', s);
+    if (ph) { await S.deleteImage(ph.id); await S.deleteImage(ph.thumbId); }
+    toast(t('msg.deleted'));
+    keepY();
+  }, { yes: t('btn.delete'), danger: true });
+};
 
 // ---------- HISTORIAL (intake) ----------
 function blankPatient(extra = {}) {

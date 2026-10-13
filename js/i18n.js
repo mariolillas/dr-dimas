@@ -94,6 +94,11 @@ const D = {
   'doc.sculptraPending': ['Waiting for the clinic\'s Sculptra consent text', 'Falta el texto de consentimiento de Sculptra'],
   'doc.draftText': ['Signed with draft text pending Dr. Dimas approval.', 'Firmado con texto borrador pendiente de aprobación de la Dra.'],
   'doc.footer': ['Electronically signed on this device. Text version {v}.', 'Firmado electrónicamente en este dispositivo. Versión del texto {v}.'],
+  'photo.groupHint': ['Photos are saved per session: before and after.', 'Las fotos se guardan por sesión: antes y después.'],
+  'photo.needSession': ['Photos are added inside each session. Start a session first.', 'Las fotos se agregan dentro de cada sesión. Primero registra una sesión.'],
+  'photo.none': ['No photos for this session yet', 'Esta sesión aún no tiene fotos'], 'photo.paperGroup': ['Paper chart sheets', 'Hojas del expediente en papel'],
+  'photo.more': ['Show {n} earlier sessions', 'Ver {n} sesiones anteriores'], 'photo.added': ['{n} photo(s) added', '{n} foto(s) agregada(s)'],
+  'photo.deleteQ': ['Delete this photo?', '¿Eliminar esta foto?'], 'pat.photoSet': ['Patient photo', 'Foto del paciente'],
   'photo.before': ['Before', 'Antes'], 'photo.after': ['After', 'Después'], 'photo.paper': ['Paper chart', 'Hoja en papel'],
 
   // intake

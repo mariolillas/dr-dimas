@@ -8,6 +8,7 @@ import { t, getLang } from '../i18n.js';
 import { SCREENS, SHEETS, A, st, go, back, render, openSheet, closeSheet, toast, ask, navbar, fmtDate,
   chip, icon, pickImages, settings } from '../core.js';
 import { alertChips } from './home.js';
+import { photoGroup } from './patient.js';
 
 const zl = (z) => F.zoneLabel(z, getLang());
 
@@ -290,7 +291,7 @@ SCREENS.sessionView = ({ id, fresh }) => {
         </section>
       </div>
     </div>
-    ${s.photos.length ? html`<section class="card"><h3>${t('ses.photos')}</h3><div class="thumbs">${s.photos.map((ph) => html`<button class="thumb" data-act="viewPhoto" data-img="${ph.id}"><img data-img="${ph.thumbId}" alt=""><span>${t('photo.' + ph.tag)}</span></button>`)}</div></section>` : ''}
+    <section class="card no-print"><h3>${t('ses.photos')}</h3>${photoGroup(s)}</section>
     ${s.notes ? html`<section class="card"><h3>${t('ses.notes')}</h3><p class="pre">${s.notes}</p></section>` : ''}
     <div class="row gap wrap no-print">
       ${INSTRUCTIONS[s.type] ? html`<button class="btn ghost" data-act="instructions" data-type="${s.type}" data-pid="${s.pid}">${icon('share')} ${t('ses.instr')}</button>` : ''}
