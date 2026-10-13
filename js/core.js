@@ -141,12 +141,28 @@ fileInput.addEventListener('change', async () => {
   fileInput.value = '';
   if (files.length && fileCb) await Promise.resolve(fileCb(files)).catch(showError);
 });
-export function pickImages(cb, { multiple = false, camera = false } = {}) {
+// Toda acción de foto pasa por esta hoja: "Tomar foto" (cámara directa, lo principal) o "Elegir de mis fotos".
+// Así la cámara aparece siempre, sin depender del menú que muestre cada sistema (iPad, iPhone, Android, compu).
+let pickOpts = { multiple: false };
+export function pickImages(cb, { multiple = false } = {}) {
   fileCb = cb;
-  fileInput.multiple = multiple;
-  if (camera) fileInput.setAttribute('capture', 'environment'); else fileInput.removeAttribute('capture');
-  fileInput.click();
+  pickOpts = { multiple };
+  openSheet('photoSource');
 }
+function launchPicker(camera) {
+  fileInput.multiple = camera ? false : pickOpts.multiple;
+  if (camera) fileInput.setAttribute('capture', 'environment'); else fileInput.removeAttribute('capture');
+  fileInput.click(); // dentro del mismo toque del usuario: si no, el navegador bloquea la cámara
+}
+SHEETS.photoSource = () => ({
+  html: html`<div class="sheet-body photo-source">
+    <button class="btn primary big full" data-act="photoCamera">${icon('camera')} ${t('photo.camera')}</button>
+    <button class="btn ghost full" data-act="photoLibrary">${t('photo.library')}</button>
+    <button class="link center" data-act="closeSheet">${t('btn.cancel')}</button>
+  </div>`,
+});
+A.photoCamera = () => { closeSheet(); launchPicker(true); };
+A.photoLibrary = () => { closeSheet(); launchPicker(false); };
 const jsonInput = document.createElement('input');
 jsonInput.type = 'file';
 jsonInput.accept = '.json,application/json';

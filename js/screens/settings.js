@@ -8,7 +8,7 @@ import { SCREENS, A, st, go, back, render, toast, ask, navbar, fmtDate, icon, se
 import { lockNow } from './auth.js';
 import { header } from './home.js';
 
-export const APP_VERSION = '0.1.3';
+export const APP_VERSION = '0.1.4';
 
 SCREENS.settings = () => {
   const s = settings();

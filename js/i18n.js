@@ -113,6 +113,7 @@ const D = {
   'photo.none': ['No photos for this session yet', 'Esta sesión aún no tiene fotos'], 'photo.paperGroup': ['Paper chart sheets', 'Hojas del expediente en papel'],
   'photo.more': ['Show {n} earlier sessions', 'Ver {n} sesiones anteriores'], 'photo.added': ['{n} photo(s) added', '{n} foto(s) agregada(s)'],
   'photo.deleteQ': ['Delete this photo?', '¿Eliminar esta foto?'], 'pat.photoSet': ['Patient photo', 'Foto del paciente'],
+  'photo.camera': ['Take photo', 'Tomar foto'], 'photo.library': ['Choose from my photos', 'Elegir de mis fotos'],
   'photo.before': ['Before', 'Antes'], 'photo.after': ['After', 'Después'], 'photo.paper': ['Paper chart', 'Hoja en papel'],
 
   // intake
