@@ -1,0 +1,7 @@
+# Nunca subir datos ni respaldos de pacientes
+*.drdimas.json
+drdimas-backup-*.json
+backups/
+*.log
+.DS_Store
+Thumbs.db
