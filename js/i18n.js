@@ -33,6 +33,20 @@ const D = {
   'unit.vial': ['vial', 'vial'], 'unit.vials': ['vials', 'viales'],
   'view.front': ['Front', 'Frente'], 'view.left': ['Left profile', 'Perfil izq.'], 'view.right': ['Right profile', 'Perfil der.'],
 
+  // modo prueba
+  'test.pill': ['Test mode', 'Modo prueba'],
+  'test.banner': ['TEST MODE — sample data only. Records are not protected yet: do not enter real patients.', 'MODO PRUEBA: solo datos de ejemplo. Los expedientes aún no están protegidos; no captures pacientes reales.'],
+  'test.title': ['Test mode', 'Modo prueba'],
+  'test.explain': ['The app opens without a passcode so you can try everything. When the clinic is ready to use it with real patients, finish testing: this erases all test data and sets up your private passcode and recovery code.', 'La app abre sin código para que pruebes todo. Cuando la clínica vaya a usarla con pacientes reales, termina las pruebas: se borra todo lo de prueba y configuras tu código privado y tu código de recuperación.'],
+  'test.finish': ['Finish testing & set up security', 'Terminar pruebas y configurar seguridad'],
+  'test.finishQ': ['This erases ALL test data on this device and starts the real setup (private passcode + recovery code).', 'Esto borra TODOS los datos de prueba de este dispositivo y empieza la configuración real (código privado + código de recuperación).'],
+  'test.finishQ2': ['Sure? Test patients and sessions will be deleted.', '¿Segura? Se borran los pacientes y sesiones de prueba.'],
+  'test.finishYes': ['Erase & set up', 'Borrar y configurar'],
+  'test.pinHint': ['Test mode code: {pin}', 'Código de modo prueba: {pin}'],
+  'test.reset': ['Erase everything and open in test mode', 'Borrar todo y entrar en modo prueba'],
+  'test.resetQ': ['Erase all data on this device and open the app in test mode with sample patients?', '¿Borrar todos los datos de este dispositivo y abrir en modo prueba con pacientes de ejemplo?'],
+  'test.resetYes': ['Erase & open', 'Borrar y abrir'],
+
   // setup / lock
   'setup.welcome': ['Welcome', 'Bienvenida'],
   'setup.intro': ['Patient records for Dr. Dimas Beauty Services. Everything you capture is encrypted on this iPad.', 'Expedientes de Dr. Dimas Beauty Services. Todo lo que captures se guarda cifrado en este iPad.'],

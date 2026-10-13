@@ -3,7 +3,7 @@ import * as S from '../store.js';
 import * as M from '../model.js';
 import * as F from '../face.js';
 import { INSTRUCTIONS, FILLER_PRODUCTS } from '../content.js';
-import { html, raw, uid, num, money, readImage, todayISO } from '../util.js';
+import { html, raw, uid, num, money, readImage, todayISO, smsHref } from '../util.js';
 import { t, getLang } from '../i18n.js';
 import { SCREENS, SHEETS, A, st, go, back, render, openSheet, closeSheet, toast, ask, navbar, fmtDate,
   chip, icon, pickImages, settings } from '../core.js';
@@ -328,6 +328,6 @@ A.shareInstr = async (el) => {
   if (via === 'share' && navigator.share) { try { await navigator.share({ title: ins.title, text }); } catch {} return; }
   if (via === 'copy' || via === 'share') { try { await navigator.clipboard.writeText(text); toast(t('msg.copied')); } catch { toast(t('msg.copyFail'), 'bad'); } return; }
   const ph = String(p.cell || p.phone).replace(/\D/g, '');
-  window.location.href = via === 'sms' ? `sms:+${ph.length === 10 ? '1' + ph : ph}&body=${encodeURIComponent(text)}`
+  window.location.href = via === 'sms' ? smsHref(ph, text)
     : `mailto:${p.email}?subject=${encodeURIComponent(ins.title)}&body=${encodeURIComponent(text)}`;
 };

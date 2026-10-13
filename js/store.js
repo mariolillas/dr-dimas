@@ -25,6 +25,10 @@ export const DEFAULT_SETTINGS = {
 };
 
 let key = null;
+// Modo prueba: la bóveda se creó con el código público TEST_PIN (ver config.js).
+export const flags = { test: false };
+export const isTestVault = async () => !!(await db.getKV('testMode'));
+export const markTestVault = () => db.putKV('testMode', true);
 export const data = { patient: {}, session: {}, appt: {}, doc: {}, settings: null };
 
 export const isUnlocked = () => !!key;

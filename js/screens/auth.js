@@ -2,8 +2,9 @@
 import * as S from '../store.js';
 import { html } from '../util.js';
 import { t, setLang, getLang } from '../i18n.js';
-import { SCREENS, SHEETS, A, st, go, tab, render, keypad, pinFail, toast, openSheet, closeSheet, icon, pickJSON, showError } from '../core.js';
+import { SCREENS, SHEETS, A, st, go, tab, render, keypad, pinFail, toast, openSheet, closeSheet, icon, pickJSON, showError, ask } from '../core.js';
 import { seedDemo } from '../demo.js';
+import { TEST_MODE, TEST_PIN } from '../config.js';
 
 const logo = () => html`<img class="logo-big" src="icons/logo.png" alt="Dr. Dimas Beauty Services">`;
 
@@ -106,8 +107,10 @@ SCREENS.lock = () => {
     ${st.ui.busy ? html`<p class="muted-l">${t('lock.opening')}</p>` : keypad({ title: t('lock.title'), err: st.ui.pinErr })}
     <button class="link-l" data-act="goRecover">${t('lock.forgot')}</button>
     ${st.ui.lockNote ? html`<p class="muted-l small">${st.ui.lockNote}</p>` : ''}
+    ${TEST_MODE && localStorage.getItem('drdimas.realSetup') !== '1' ? html`<button class="link-l" data-act="resetToTest">${t('test.reset')}</button>` : ''}
   </main>` };
 };
+A.resetToTest = () => ask(t('test.resetQ'), async () => { await S.wipeEverything(); location.reload(); }, { yes: t('test.resetYes'), danger: true });
 A.goRecover = () => { st.ui.recStep = 'code'; st.ui.pin = ''; go('recover', {}, { push: false }); };
 
 // Bloquea y borra todo de memoria.
@@ -186,7 +189,7 @@ SHEETS.verifyPin = ({ title }) => {
     closeSheet();
     if (fn) await fn();
   };
-  return { html: html`<div class="sheet-body">${keypad({ title: title || t('pin.staff'), err: st.ui.pinErr, light: true })}
+  return { html: html`<div class="sheet-body">${keypad({ title: title || t('pin.staff'), sub: S.flags.test ? t('test.pinHint', { pin: TEST_PIN }) : '', err: st.ui.pinErr, light: true })}
     <button class="btn ghost full" data-act="closeSheet">${t('btn.cancel')}</button></div>` };
 };
 export function verifyPin(fn, title) {

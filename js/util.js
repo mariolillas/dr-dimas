@@ -56,6 +56,14 @@ export const digits = (s) => String(s || '').replace(/\D/g, '');
 // Para buscar sin acentos ni mayúsculas: 'Lucía' → 'lucia'.
 export const norm = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
+// Enlace SMS: iPhone/iPad usa "&body=", Android usa "?body=".
+const IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+export function smsHref(phoneDigits, text) {
+  const d = String(phoneDigits || '').replace(/\D/g, '');
+  const num = d.length === 10 ? '+1' + d : '+' + d;
+  return `sms:${num}${IOS ? '&' : '?'}body=${encodeURIComponent(text)}`;
+}
+
 export function debounce(fn, ms = 400) {
   let t;
   return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };

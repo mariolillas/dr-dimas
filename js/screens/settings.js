@@ -8,7 +8,7 @@ import { SCREENS, A, st, go, back, render, toast, ask, navbar, fmtDate, icon, se
 import { lockNow } from './auth.js';
 import { header } from './home.js';
 
-export const APP_VERSION = '0.1.2';
+export const APP_VERSION = '0.1.3';
 
 SCREENS.settings = () => {
   const s = settings();
@@ -20,7 +20,11 @@ SCREENS.settings = () => {
       <button class="row-item" data-act="go" data-to="backup">${icon('cloud')}<span class="grow"><b>${t('set.backup')}</b><small>${s.lastBackup ? t('set.lastBackup', { d: fmtDate(s.lastBackup.slice(0, 10)) }) : t('set.noBackup')}</small></span>${icon('chev-r', 'chev')}</button>
       <button class="row-item" data-act="go" data-to="legal">${icon('doc')}<span class="grow"><b>${t('set.legal')}</b><small>${s.legalApproved ? t('set.legalOk', { d: fmtDate(s.legalApproved.date) }) : t('set.legalPending')}</small></span>${icon('chev-r', 'chev')}</button>
     </div>
-    <h4 class="group-h">${t('set.security')}</h4>
+    ${S.flags.test ? html`<section class="card test-card">
+      <h3>${icon('alert')} ${t('test.title')}</h3>
+      <p class="muted">${t('test.explain')}</p>
+      <button class="btn primary full" data-act="finishTesting">${t('test.finish')}</button>
+    </section>` : html`<h4 class="group-h">${t('set.security')}</h4>
     <div class="group">
       <label class="field"><span>${t('set.autolock')}</span><select data-live="setAutoLock">${[2, 5, 10, 15, 30].map((m) => html`<option value="${m}" ${s.autoLockMin === m ? 'selected' : ''}>${m} min</option>`)}</select></label>
       <label class="field"><span>${t('set.lang')}</span><select data-live="setLangSel"><option value="en" ${getLang() === 'en' ? 'selected' : ''}>English</option><option value="es" ${getLang() === 'es' ? 'selected' : ''}>Español</option></select></label>
@@ -29,7 +33,8 @@ SCREENS.settings = () => {
       <button class="row-item" data-act="changePin">${icon('lock')}<span class="grow"><b>${t('set.changePin')}</b></span>${icon('chev-r', 'chev')}</button>
       <button class="row-item" data-act="newRecovery">${icon('shield')}<span class="grow"><b>${t('set.newRecovery')}</b><small>${t('set.newRecoverySub')}</small></span>${icon('chev-r', 'chev')}</button>
       <button class="row-item" data-act="lockNow">${icon('lock')}<span class="grow"><b>${t('btn.lock')}</b></span></button>
-    </div>
+    </div>`}
+    ${S.flags.test ? html`<div class="group"><label class="field"><span>${t('set.lang')}</span><select data-live="setLangSel"><option value="en" ${getLang() === 'en' ? 'selected' : ''}>English</option><option value="es" ${getLang() === 'es' ? 'selected' : ''}>Español</option></select></label></div>` : ''}
     ${M.patients().some(M.isDemo) ? html`<button class="btn ghost full" data-act="removeDemo">${icon('trash')} ${t('set.removeDemo')}</button>` : html`<button class="btn ghost full" data-act="addDemo">${t('set.addDemo')}</button>`}
     <h4 class="group-h">${t('set.about')}</h4>
     <div class="group about">
@@ -39,6 +44,11 @@ SCREENS.settings = () => {
     <button class="btn danger-ghost full" data-act="wipeAll">${icon('trash')} ${t('set.wipe')}</button>
   </main>` };
 };
+A.finishTesting = () => ask(t('test.finishQ'), () => ask(t('test.finishQ2'), async () => {
+  try { localStorage.setItem('drdimas.realSetup', '1'); } catch {}
+  await S.wipeEverything();
+  location.reload();
+}, { yes: t('test.finishYes'), danger: true }), { yes: t('btn.continue') });
 A.setAutoLock = async (el) => { settings().autoLockMin = Number(el.value); await S.save('settings', settings()); toast(t('msg.saved')); };
 A.setLangSel = async (el) => { setLang(el.value); settings().lang = el.value; await S.save('settings', settings()); render(); };
 A.newRecovery = () => ask(t('set.newRecoveryQ'), async () => {

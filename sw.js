@@ -1,9 +1,9 @@
 // Service worker: guarda la app (solo código e íconos) para que funcione sin internet.
 // Los datos de pacientes NO pasan por aquí: viven cifrados en IndexedDB.
-const VERSION = 'drdimas-v0.1.2';
+const VERSION = 'drdimas-v0.1.3';
 const ASSETS = [
   './', './index.html', './manifest.webmanifest',
-  './js/app.js', './js/core.js', './js/store.js', './js/db.js', './js/crypto.js', './js/util.js', './js/i18n.js',
+  './js/app.js', './js/config.js', './js/core.js', './js/store.js', './js/db.js', './js/crypto.js', './js/util.js', './js/i18n.js',
   './js/model.js', './js/content.js', './js/face.js', './js/pad.js', './js/demo.js',
   './js/screens/auth.js', './js/screens/home.js', './js/screens/patient.js', './js/screens/session.js',
   './js/screens/consent.js', './js/screens/settings.js',

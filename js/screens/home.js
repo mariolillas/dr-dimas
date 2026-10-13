@@ -2,7 +2,7 @@
 import * as S from '../store.js';
 import * as M from '../model.js';
 import { alertsFor, TEMPLATES } from '../content.js';
-import { html, str, todayISO, addDays, daysBetween, firstName, digits, uid, norm } from '../util.js';
+import { html, str, todayISO, addDays, daysBetween, firstName, digits, uid, norm, smsHref } from '../util.js';
 import { t, getLang, setLang } from '../i18n.js';
 import { SCREENS, SHEETS, A, st, go, render, openSheet, closeSheet, toast, ask, fmtDate, fmtTime, ago, avatar, chip, icon, settings, hydrate } from '../core.js';
 
@@ -24,8 +24,9 @@ export function header() {
     <div class="brand"><img src="icons/mark.png" alt=""><div><b class="serif">Dr. Dimas</b><small>${t('app.sub')}</small></div></div>
     <div class="top-r">
       <button class="seg-mini" data-act="langSwitch">${getLang() === 'en' ? 'EN · es' : 'ES · en'}</button>
-      <span class="pill">${icon('lock')} ${t('top.encrypted')}${backupDays == null ? '' : ' · ' + t('top.backup', { n: backupDays })}</span>
-      <button class="icon-btn" data-act="lockNow" aria-label="${t('btn.lock')}">${icon('lock')}</button>
+      ${S.flags.test ? html`<span class="pill test">${icon('alert')} ${t('test.pill')}</span>`
+        : html`<span class="pill">${icon('lock')} ${t('top.encrypted')}${backupDays == null ? '' : ' · ' + t('top.backup', { n: backupDays })}</span>
+      <button class="icon-btn" data-act="lockNow" aria-label="${t('btn.lock')}">${icon('lock')}</button>`}
     </div>
   </header>`;
 }
@@ -38,8 +39,9 @@ A.langSwitch = async () => {
 
 function banners() {
   const s = settings(), out = [];
+  if (S.flags.test) out.push(html`<div class="banner red">${icon('alert')}<span>${t('test.banner')}</span></div>`);
   const bd = s.lastBackup ? daysBetween(s.lastBackup.slice(0, 10), todayISO()) : null;
-  if (bd == null || bd >= 3) out.push(html`<button class="banner amber" data-act="go" data-to="backup">${icon('alert')}<span>${bd == null ? t('ban.noBackup') : t('ban.oldBackup', { n: bd })}</span>${icon('chev-r')}</button>`);
+  if (!S.flags.test && (bd == null || bd >= 3)) out.push(html`<button class="banner amber" data-act="go" data-to="backup">${icon('alert')}<span>${bd == null ? t('ban.noBackup') : t('ban.oldBackup', { n: bd })}</span>${icon('chev-r')}</button>`);
   if (!s.legalApproved) out.push(html`<button class="banner" data-act="go" data-to="legal">${icon('doc')}<span>${t('ban.legal')}</span>${icon('chev-r')}</button>`);
   if (M.patients().some(M.isDemo)) out.push(html`<div class="banner gray">${icon('people')}<span>${t('ban.demo')}</span></div>`);
   return out;
@@ -114,7 +116,7 @@ function fuRow(f) {
   return html`<div class="row-item">
     ${avatar(f.p.name, '', f.p.photo?.thumbId)}
     <span class="grow"><b>${f.p.name}</b><small>${t('fu.' + f.kind)} · ${M.sessionTitle(f.s)} · ${ago(f.s.date)}</small></span>
-    <button class="btn small mint" data-act="message" data-pid="${f.p.id}" data-sid="${f.s.id}" data-kind="${f.kind}">${icon('msg')} ${t('btn.message')}</button>
+    <button class="btn small mint" data-act="message" data-pid="${f.p.id}" data-sid="${f.s.id}" data-kind="${f.kind}" aria-label="${t('btn.message')}">${icon('msg')}<span class="lbl">${t('btn.message')}</span></button>
     <button class="btn small ghost" data-act="fuDone" data-sid="${f.s.id}" data-kind="${f.kind}">${icon('check')}</button>
   </div>`;
 }
@@ -295,7 +297,7 @@ A.sendVia = async (el) => {
     try { await navigator.clipboard.writeText(text); toast(t('msg.copied')); } catch { toast(t('msg.copyFail'), 'bad'); }
     return;
   }
-  const href = via === 'sms' ? `sms:+${e164}&body=${encodeURIComponent(text)}`
+  const href = via === 'sms' ? smsHref(phone, text)
     : via === 'wa' ? `https://wa.me/${e164}?text=${encodeURIComponent(text)}`
       : `mailto:${p.email}?subject=${encodeURIComponent(settings().clinic.name)}&body=${encodeURIComponent(text)}`;
   window.location.href = href;
